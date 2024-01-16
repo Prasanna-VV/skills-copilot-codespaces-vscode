@@ -1,34 +1,55 @@
-// Create a web server 
-// that can receive a POST request containing a comment and username field.
-// Store the comments in an array in memory.
-// Add a GET request to the path /comments that returns the list of comments.
-// Test your web server using Postman or curl.
-
-// 1. Import the express library
+// Create web server
 const express = require("express");
-
-// 2. Create an instance of an express app
 const app = express();
 
-// 3. Define a port to run on
-const port = 3000;
+// Import the comment model
+const Comment = require("../models/comment");
 
-// 4. Define a route handler for the default home page
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+// Import the post model
+const Post = require("../models/post");
 
-// 5. Define a route handler for the /comments post request
-app.post("/comments", (req, res) => {
-  res.send("Post request received");
-});
+// Import the user model
+const User = require("../models/user");
 
-// 6. Define a route handler for the /comments get request
-app.get("/comments", (req, res) => {
-  res.send("Get request received");
-});
+// Import the middleware
+const middleware = require("../middleware");
 
-// 7. Start the server listening on the port
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-});
+// Import the express error handler
+const ExpressError = require("../utils/ExpressError");
+
+// Import the catchAsync function
+const catchAsync = require("../utils/catchAsync");
+
+// Import the Express router
+const router = express.Router({ mergeParams: true });
+
+// Import the comments controller
+const commentsController = require("../controllers/comments");
+
+// Import the Joi schemas
+const { commentSchema } = require("../schemas.js");
+
+// Import the error handler
+const { validateComment, isLoggedIn, isCommentAuthor } = middleware;
+
+// Import the Express router
+const { route } = require("./posts");
+
+// Create a new comment
+router.post(
+  "/",
+  isLoggedIn,
+  validateComment,
+  catchAsync(commentsController.createComment)
+);
+
+// Delete a comment
+router.delete(
+  "/:commentId",
+  isLoggedIn,
+  isCommentAuthor,
+  catchAsync(commentsController.deleteComment)
+);
+
+// Export the router
+module.exports = router;
